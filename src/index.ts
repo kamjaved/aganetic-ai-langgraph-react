@@ -1,12 +1,11 @@
 import express, { Request, Response, Application } from 'express';
 import { config } from 'dotenv';
-import { agent } from './agent';
+import { agent, setupCheckpointer } from './agent';
 import { HumanMessage } from '@langchain/core/messages';
 import cors from 'cors';
 import prisma from './db';
 
 config();
-
 // setup cors
 
 const app: Application = express();
@@ -21,10 +20,18 @@ app.get('/', (req: Request, res: Response) => {
 
 app.post('/agent', async (req: Request, res: Response) => {
   try {
+    const threadId = req.body.threadId || 'default-chat-thread-123';
     console.log('Human Message: ', req.body.message);
-    const result = await agent.invoke({
-      messages: [new HumanMessage(req.body.message)],
-    });
+    console.log('Thread ID: ', threadId);
+
+    const config = { configurable: { thread_id: threadId } };
+
+    const result = await agent.invoke(
+      {
+        messages: [new HumanMessage(req.body.message)],
+      },
+      config
+    );
     console.log('AI REPLY: ', result.messages[result.messages.length - 1].content);
     res.send({
       status: 200,
@@ -58,6 +65,13 @@ app.post('/user', async (req: Request, res: Response) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+setupCheckpointer()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to setup checkpointer:', err);
+    process.exit(1);
+  });

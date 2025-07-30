@@ -34,6 +34,7 @@ const App: React.FC = () => {
       text: inputMessage,
       sender: 'user',
       timestamp: new Date(),
+      threadId: 'default-chat-thread-124',
     };
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -43,6 +44,7 @@ const App: React.FC = () => {
     try {
       const response = await axios.post('http://localhost:3000/agent', {
         message: userMessage.text,
+        threadId: 'default-chat-thread-123',
       });
 
       const agentResponseText = response.data.ai_message || 'No response from agent.';
@@ -82,7 +84,7 @@ const App: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl flex flex-col h-[90vh] overflow-hidden border border-gray-200">
         {/* Chat Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-          <h1 className="text-2xl font-bold text-gray-800">AI Ronaquey Name is Rounaque Chat</h1>
+          <h1 className="text-2xl font-bold text-gray-800">AI Agentic Chat</h1>
         </div>
 
         {/* Chat Messages Area */}

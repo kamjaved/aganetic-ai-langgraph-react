@@ -4,6 +4,7 @@ export interface Message {
   sender: 'user' | 'agent' | 'error';
   timestamp: Date;
   isMarkdown?: boolean;
+  threadId?: string;
 }
 
 export interface UserInputProps {
