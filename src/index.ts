@@ -1,9 +1,10 @@
 import express, { Request, Response, Application } from 'express';
 import { config } from 'dotenv';
-import { agent, setupCheckpointer } from './agent';
+import { agent, setupCheckpointer, checkpointer } from './agent';
 import { HumanMessage } from '@langchain/core/messages';
 import cors from 'cors';
 import prisma from './db';
+import { CheckpointListOptions } from '@langchain/langgraph-checkpoint';
 
 config();
 // setup cors
@@ -18,9 +19,51 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, TypeScript in Node.js!');
 });
 
+// --------TESTING CHECKPOINTER METHOD------------------
+app.post('/checpointer', async (req: Request, res: Response) => {
+  try {
+    const options: CheckpointListOptions = {
+      limit: 2,
+    };
+
+    const threadId = req.body.threadId || 'default-chat-thread-124';
+    const config = { configurable: { thread_id: threadId } };
+
+    // GET
+    const checkpointerGet = await checkpointer.get(config);
+
+    // LIST
+    const checkpointsList = [];
+    for await (const checkpoint of checkpointer.list(config, options)) {
+      checkpointsList.push({
+        checkpointId: checkpoint?.config?.configurable?.checkpoint_id,
+        timestamp: new Date(checkpoint.checkpoint.ts).toLocaleString(),
+      });
+    }
+
+    // GET NEXT VERSION
+    const currentVersion = 8;
+    const nextVersion = await checkpointer.getNextVersion(currentVersion);
+
+    res.send({
+      status: 200,
+      nextVersion: nextVersion,
+      checkpointsList: checkpointsList,
+      checkpointerGet: checkpointerGet,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not fetch Checkpointer.' });
+  }
+});
+
 app.post('/agent', async (req: Request, res: Response) => {
   try {
-    const threadId = req.body.threadId || 'default-chat-thread-123';
+    const threadId = req.body.threadId || 'default-chat-thread-125';
+    const userMessage = req.body.message;
+    if (!userMessage) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
     console.log('Human Message: ', req.body.message);
     console.log('Thread ID: ', threadId);
 
@@ -32,9 +75,11 @@ app.post('/agent', async (req: Request, res: Response) => {
       },
       config
     );
+
     console.log('AI REPLY: ', result.messages[result.messages.length - 1].content);
     res.send({
       status: 200,
+      threadId: threadId,
       ai_message: result.messages[result.messages.length - 1].content,
     });
   } catch (error) {

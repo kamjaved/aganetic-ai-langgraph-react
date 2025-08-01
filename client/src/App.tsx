@@ -44,7 +44,7 @@ const App: React.FC = () => {
     try {
       const response = await axios.post('http://localhost:3000/agent', {
         message: userMessage.text,
-        threadId: 'default-chat-thread-123',
+        threadId: 'default-chat-thread-124',
       });
 
       const agentResponseText = response.data.ai_message || 'No response from agent.';

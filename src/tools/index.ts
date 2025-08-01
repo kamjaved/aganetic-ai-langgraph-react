@@ -8,6 +8,8 @@ import {
   getUsersByDepartment,
   getUsersByName,
   getUsersByProfession,
+  getAllUsersByDepartment,
+  getAllUsersByCountry,
 } from './dbTools';
 
 // Export all tools as a single array for the agent
@@ -21,5 +23,7 @@ export const tools = [
   getUsersByDepartment,
   getUsersByName,
   getUsersByProfession,
+  getAllUsersByCountry,
+  getAllUsersByDepartment,
   convertCurrency,
 ];

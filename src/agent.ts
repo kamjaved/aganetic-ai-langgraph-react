@@ -13,7 +13,7 @@ const pgPool = new Pool({
   connectionString: process.env.DB_URL,
 });
 
-const checkpointer = new PostgresSaver(pgPool);
+export const checkpointer = new PostgresSaver(pgPool);
 
 export const setupCheckpointer = async () => {
   await checkpointer.setup();

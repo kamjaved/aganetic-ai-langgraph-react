@@ -227,3 +227,55 @@ export const getUserById = tool(
     }),
   }
 );
+
+// Tool to get all user grouped by their country
+export const getAllUsersByCountry = tool(
+  async () => {
+    try {
+      const users = await prisma.user.groupBy({
+        by: ['country'],
+        _count: {
+          id: true,
+        },
+      });
+
+      return JSON.stringify(users);
+    } catch (error) {
+      console.error('Error getting all users grouped by country:', error);
+      return 'Failed to get all users grouped by country';
+    }
+  },
+  {
+    name: 'getAllUsersByCountry',
+    description: 'Get all users grouped by their country',
+    schema: z.object({
+      country: z.string().describe('The country or part of country to search for'),
+    }),
+  }
+);
+
+// Tool to get all users grouped by their department
+export const getAllUsersByDepartment = tool(
+  async () => {
+    try {
+      const users = await prisma.user.groupBy({
+        by: ['department'],
+        _count: {
+          id: true,
+        },
+      });
+
+      return JSON.stringify(users);
+    } catch (error) {
+      console.error('Error getting all users grouped by department:', error);
+      return 'Failed to get all users grouped by department';
+    }
+  },
+  {
+    name: 'getAllUsersByDepartment',
+    description: 'Get all users grouped by their department',
+    schema: z.object({
+      profession: z.string().describe('The profession/job title or part of it to search for'),
+    }),
+  }
+);
