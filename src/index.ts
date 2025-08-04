@@ -5,6 +5,7 @@ import { HumanMessage } from '@langchain/core/messages';
 import cors from 'cors';
 import prisma from './db';
 import { CheckpointListOptions } from '@langchain/langgraph-checkpoint';
+import { getFormattedPrompt } from './agent';
 
 config();
 // setup cors
@@ -60,10 +61,18 @@ app.post('/agent', async (req: Request, res: Response) => {
   try {
     const threadId = req.body.threadId || 'default-chat-thread-125';
     const userMessage = req.body.message;
+
     if (!userMessage) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
+    // Format prompt using the new PromptManager
+    const formattedPrompt = await getFormattedPrompt(userMessage, {
+      context: req.body.context,
+      history: req.body.history,
+    });
+
+    console.log('Formatted Prompt: ', formattedPrompt);
     console.log('Human Message: ', req.body.message);
     console.log('Thread ID: ', threadId);
 
@@ -71,7 +80,7 @@ app.post('/agent', async (req: Request, res: Response) => {
 
     const result = await agent.invoke(
       {
-        messages: [new HumanMessage(req.body.message)],
+        messages: formattedPrompt,
       },
       config
     );

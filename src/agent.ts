@@ -5,7 +5,11 @@ import { tools } from './tools';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
+import { PromptManager } from './prompt/PromptManager';
 config();
+
+// Initialize the prompt manager
+const promptManager = new PromptManager(tools);
 
 console.log('DB URL', process.env.DB_URL);
 
@@ -29,3 +33,7 @@ export const agent = createReactAgent({
   tools: tools,
   checkpointSaver: checkpointer,
 });
+
+export const getFormattedPrompt = async (input: string, context: any = {}) => {
+  return await promptManager.formatPrompt(input, context);
+};
