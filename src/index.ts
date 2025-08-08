@@ -1,11 +1,13 @@
 import express, { Request, Response, Application } from 'express';
 import { config } from 'dotenv';
 import { agent, setupCheckpointer, checkpointer } from './agent';
-import { HumanMessage } from '@langchain/core/messages';
 import cors from 'cors';
 import prisma from './db';
 import { CheckpointListOptions } from '@langchain/langgraph-checkpoint';
 import { getFormattedPrompt } from './agent';
+import { runResearch } from './stateGraph/researchGraphSecndry';
+import { Currency, runConversion } from './stateGraph/basic';
+import { parseNaturalLanguageQuery } from './stateGraph/queryParser';
 
 config();
 // setup cors
@@ -20,7 +22,10 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, TypeScript in Node.js!');
 });
 
-// --------TESTING CHECKPOINTER METHOD------------------
+/////////////////////////////////////////////////////////////////
+/////////////----- TESTING CHECKPOINTER METHOD-----//////////////
+////////////////////////////////////////////////////////////////
+
 app.post('/checpointer', async (req: Request, res: Response) => {
   try {
     const options: CheckpointListOptions = {
@@ -57,6 +62,10 @@ app.post('/checpointer', async (req: Request, res: Response) => {
   }
 });
 
+/////////////////////////////////////////////////////////////////
+/////////////----- AGENT ENDPOINT -----//////////////
+////////////////////////////////////////////////////////////////
+
 app.post('/agent', async (req: Request, res: Response) => {
   try {
     const threadId = req.body.threadId || 'default-chat-thread-125';
@@ -65,6 +74,8 @@ app.post('/agent', async (req: Request, res: Response) => {
     if (!userMessage) {
       return res.status(400).json({ error: 'Message is required' });
     }
+    console.log('Human Message: ', userMessage);
+    console.log('Thread ID: ', threadId);
 
     // Format prompt using the new PromptManager
     const formattedPrompt = await getFormattedPrompt(userMessage, {
@@ -73,8 +84,6 @@ app.post('/agent', async (req: Request, res: Response) => {
     });
 
     console.log('Formatted Prompt: ', formattedPrompt);
-    console.log('Human Message: ', req.body.message);
-    console.log('Thread ID: ', threadId);
 
     const config = { configurable: { thread_id: threadId } };
 
@@ -86,6 +95,7 @@ app.post('/agent', async (req: Request, res: Response) => {
     );
 
     console.log('AI REPLY: ', result.messages[result.messages.length - 1].content);
+
     res.send({
       status: 200,
       threadId: threadId,
@@ -96,6 +106,10 @@ app.post('/agent', async (req: Request, res: Response) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
+/////////////////////////////////////////////////////////////////
+/////////////-----PRISMA NEW USER CREATE-----//////////////
+////////////////////////////////////////////////////////////////
 
 app.post('/user', async (req: Request, res: Response) => {
   const { name, email, city, country, jobTitle, department, salary, currency, remotePercent } = req.body;
@@ -116,6 +130,74 @@ app.post('/user', async (req: Request, res: Response) => {
     res.status(201).json(newUser);
   } catch (error) {
     res.status(500).json({ error: 'Could not create user.' });
+  }
+});
+
+/////////////////////////////////////////////////////////////////
+////////////////----- STATE GRAPH ENDPOINTS------- //////////////
+////////////////////////////////////////////////////////////////
+
+app.post('/state-graph/research', async (req: Request, res: Response) => {
+  try {
+    const { query } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
+    const result = await runResearch(query);
+
+    res.json({
+      query,
+      result,
+    });
+  } catch (error) {
+    console.error('Research graph error:', error);
+    res.status(500).json({ error: 'Failed to process research query' });
+  }
+});
+
+app.post('/state-graph/convert', async (req: Request, res: Response) => {
+  try {
+    const { query } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        error: 'Query is required. Example: "what will be INR for 1000USD?"',
+      });
+    }
+
+    // Parse natural language query
+    const parsedQuery = await parseNaturalLanguageQuery(query);
+
+    // Check confidence level
+    if (parsedQuery.confidence < 0.5) {
+      return res.status(400).json({
+        error:
+          'Could not understand the query. Please be more specific about the amount and target currency.',
+        suggestion: 'Try: "Convert 1000 USD to INR" or "What is 500 dollars in euros?"',
+      });
+    }
+
+    // Validate target currency
+    if (!Object.values(Currency).includes(parsedQuery.targetCurrency as Currency)) {
+      return res.status(400).json({
+        error: 'Invalid target currency. Supported currencies: EUR, INR, USD',
+      });
+    }
+    // Run the conversion using your existing StateGraph
+    const result = await runConversion(parsedQuery.amountInUSD, parsedQuery.targetCurrency as Currency);
+
+    res.json({
+      originalQuery: query,
+      parsedQuery,
+      result,
+    });
+  } catch (error) {
+    console.error('Currency conversion error:', error);
+    res.status(500).json({
+      error: 'Failed to process currency conversion',
+    });
   }
 });
 
