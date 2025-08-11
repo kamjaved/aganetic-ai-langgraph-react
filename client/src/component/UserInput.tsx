@@ -1,4 +1,5 @@
 import type { UserInputProps } from '../constant';
+import UserSelector from './UserSelector';
 
 const UserInput: React.FC<UserInputProps> = ({
   inputMessage,
@@ -7,6 +8,9 @@ const UserInput: React.FC<UserInputProps> = ({
   handleKeyPress,
   isLoading,
   textareaRef,
+  users,
+  selectedUser,
+  onSelectUser,
 }) => (
   <div className="p-4 border-t border-gray-200 flex items-end space-x-3 bg-white">
     <textarea
@@ -19,6 +23,8 @@ const UserInput: React.FC<UserInputProps> = ({
       disabled={isLoading}
       rows={1}
     />
+    <UserSelector users={users} selectedUser={selectedUser} onSelectUser={onSelectUser} />
+
     <button
       onClick={sendMessage}
       disabled={isLoading || inputMessage.trim() === ''}

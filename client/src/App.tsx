@@ -1,16 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
-import type { Message } from './constant';
-import UserMessage from './component/UserMessages';
+import type { Message, User } from './constant';
 import AgentMessage from './component/AgentMessage';
+// COMPONENTS
+import UserMessage from './component/UserMessages';
 import UserInput from './component/UserInput';
+
+const PREDEFINED_USERS: User[] = [
+  { id: '1', name: 'Allan', role: 'HR', threadId: 'thread-allan-hr' },
+  { id: '2', name: 'Joe', role: 'Employee', threadId: 'thread-joe-employee' },
+  { id: '3', name: 'Chris', role: 'Manager', threadId: 'thread-chris-manager' },
+];
 
 // Main App component for the chat application
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -34,7 +42,7 @@ const App: React.FC = () => {
       text: inputMessage,
       sender: 'user',
       timestamp: new Date(),
-      threadId: 'default-chat-thread-124',
+      threadId: selectedUser?.threadId,
     };
 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -44,7 +52,9 @@ const App: React.FC = () => {
     try {
       const response = await axios.post('http://localhost:3000/agent', {
         message: userMessage.text,
-        threadId: 'default-chat-thread-124',
+        threadId: selectedUser?.threadId, // Send threadId to backend
+        username: selectedUser?.name, // Send username to backend
+        userRole: selectedUser?.role, // Send userRole to backend
       });
 
       const agentResponseText = response.data.ai_message || 'No response from agent.';
@@ -130,6 +140,9 @@ const App: React.FC = () => {
           handleKeyPress={handleKeyPress}
           isLoading={isLoading}
           textareaRef={textareaRef}
+          users={PREDEFINED_USERS}
+          selectedUser={selectedUser}
+          onSelectUser={(user) => setSelectedUser(user)}
         />
       </div>
     </div>
