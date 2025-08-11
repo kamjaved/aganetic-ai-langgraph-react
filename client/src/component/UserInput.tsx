@@ -20,7 +20,7 @@ const UserInput: React.FC<UserInputProps> = ({
       value={inputMessage}
       onChange={(e) => setInputMessage(e.target.value)}
       onKeyPress={handleKeyPress}
-      disabled={isLoading}
+      disabled={isLoading || !selectedUser}
       rows={1}
     />
     <UserSelector users={users} selectedUser={selectedUser} onSelectUser={onSelectUser} />

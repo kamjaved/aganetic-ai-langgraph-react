@@ -21,3 +21,14 @@ model User {
   joinedAt      DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model Message {
+  id          String   @id @default(uuid())
+  text        String
+  sender      String  
+  threadId    String
+  username    String
+  timestamp   DateTime @default(now())
+  isMarkdown  Boolean  @default(false)
+  userRole    String?
+}

@@ -1,32 +1,45 @@
-import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import React, { useRef, useEffect, useState } from 'react';
 import './App.css';
-import type { Message, User } from './constant';
+import type { User } from './constant';
+
+// Components
 import AgentMessage from './component/AgentMessage';
-// COMPONENTS
 import UserMessage from './component/UserMessages';
 import UserInput from './component/UserInput';
 
+// Custom Hooks
+import { useMessages } from './hooks/useMessages';
+import { useUserSelection } from './hooks/useUserSelection';
+
+// Predefined users for the application
 const PREDEFINED_USERS: User[] = [
   { id: '1', name: 'Allan', role: 'HR', threadId: 'thread-allan-hr' },
   { id: '2', name: 'Joe', role: 'Employee', threadId: 'thread-joe-employee' },
   { id: '3', name: 'Chris', role: 'Manager', threadId: 'thread-chris-manager' },
 ];
 
-// Main App component for the chat application
+/**
+ * Main App component for the chat application
+ * Manages the user interface and coordinates between different parts of the application
+ */
 const App: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // State for the input message
   const [inputMessage, setInputMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  // Refs for UI manipulation
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Custom hooks for user selection and message management
+  const { selectedUser, handleUserSelect } = useUserSelection();
+  const { messages, isLoading, sendMessage } = useMessages(selectedUser);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -34,58 +47,24 @@ const App: React.FC = () => {
     }
   }, [inputMessage]);
 
-  const sendMessage = async () => {
-    if (inputMessage.trim() === '') return;
-
-    const userMessage: Message = {
-      id: Date.now().toString() + '-user',
-      text: inputMessage,
-      sender: 'user',
-      timestamp: new Date(),
-      threadId: selectedUser?.threadId,
-    };
-
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+  /**
+   * Handle sending a message
+   * Calls the sendMessage function from useMessages hook
+   */
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() === '' || !selectedUser) return;
+    await sendMessage(inputMessage);
     setInputMessage('');
-    setIsLoading(true);
-
-    try {
-      const response = await axios.post('http://localhost:3000/agent', {
-        message: userMessage.text,
-        threadId: selectedUser?.threadId, // Send threadId to backend
-        username: selectedUser?.name, // Send username to backend
-        userRole: selectedUser?.role, // Send userRole to backend
-      });
-
-      const agentResponseText = response.data.ai_message || 'No response from agent.';
-
-      const agentMessage: Message = {
-        id: Date.now().toString() + '-agent',
-        text: agentResponseText,
-        sender: 'agent',
-        timestamp: new Date(),
-        isMarkdown: true,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, agentMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage: Message = {
-        id: Date.now().toString() + '-error',
-        text: 'Oops! Something went wrong. Please try again.',
-        sender: 'error',
-        timestamp: new Date(),
-      };
-      setMessages((prevMessages) => [...prevMessages, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
+  /**
+   * Handle key press events in the input field
+   * Sends the message on Enter key (without Shift)
+   */
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
@@ -99,11 +78,28 @@ const App: React.FC = () => {
 
         {/* Chat Messages Area */}
         <div className="flex-1 p-4 overflow-y-auto flex flex-col space-y-4 bg-gray-50">
-          {messages.map((msg) => (
-            <React.Fragment key={msg.id}>
-              {msg.sender === 'user' ? <UserMessage message={msg} /> : <AgentMessage message={msg} />}
-            </React.Fragment>
-          ))}
+          {!selectedUser ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-500">
+                <p className="text-lg mb-2">Select a user to start chatting</p>
+                <p className="text-sm">Choose from Allan (HR), Joe (Employee), or Chris (Manager)</p>
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-500">
+                <p className="text-lg mb-2">No messages yet</p>
+                <p className="text-sm">Start a conversation with the AI assistant</p>
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <React.Fragment key={msg.id}>
+                {msg.sender === 'user' ? <UserMessage message={msg} /> : <AgentMessage message={msg} />}
+              </React.Fragment>
+            ))
+          )}
+
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex justify-start">
@@ -129,20 +125,20 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} /> {/* Element to scroll into view */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input Area */}
         <UserInput
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
-          sendMessage={sendMessage}
+          sendMessage={handleSendMessage}
           handleKeyPress={handleKeyPress}
           isLoading={isLoading}
           textareaRef={textareaRef}
           users={PREDEFINED_USERS}
           selectedUser={selectedUser}
-          onSelectUser={(user) => setSelectedUser(user)}
+          onSelectUser={handleUserSelect}
         />
       </div>
     </div>

@@ -151,6 +151,17 @@ async function main() {
       currency: 'CAD',
       remotePercent: 80,
     },
+    {
+      email: 'kamranjaved@example.com',
+      name: 'Kamran javed',
+      city: 'Kolkata',
+      country: 'INDIA',
+      jobTitle: 'Software Engineer',
+      department: 'Engineering',
+      salary: 80000.0,
+      currency: 'INR',
+      remotePercent: 120,
+    },
   ];
 
   for (const userData of users) {

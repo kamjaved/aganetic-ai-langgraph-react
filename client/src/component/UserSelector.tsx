@@ -1,4 +1,3 @@
-// src/component/UserSelector.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import userIcon from '../assets/User.svg';
 import type { User } from '../constant';
@@ -31,11 +30,17 @@ const UserSelector: React.FC<UserSelectorProps> = ({ users, selectedUser, onSele
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-3 rounded-xl bg-gray-200 hover:bg-gray-300 transition-colors duration-200 flex items-center justify-center"
+        className={`p-3 rounded-xl hover:bg-gray-300 transition-colors duration-200 flex items-center justify-center ${
+          selectedUser ? 'bg-blue-100 text-blue-800' : 'bg-gray-200'
+        }`}
         aria-label="Select user"
       >
         <img src={userIcon} alt="User" className="h-6 w-6" />
-        {selectedUser && <span className="ml-2 text-sm font-medium text-gray-700">{selectedUser.name}</span>}
+        {selectedUser && (
+          <span className="ml-2 text-sm font-medium">
+            {selectedUser.name} ({selectedUser.role})
+          </span>
+        )}
       </button>
 
       {isOpen && (

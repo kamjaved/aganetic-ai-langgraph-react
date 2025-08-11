@@ -14,6 +14,24 @@ export interface User {
   threadId: string;
 }
 
+export interface Message {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: Date;
+  threadId?: string;
+  isMarkdown?: boolean;
+  userRole?: string;
+}
+export interface ApiMessage {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: string;
+  threadId: string;
+  isMarkdown?: boolean;
+}
+
 export interface UserInputProps {
   inputMessage: string;
   setInputMessage: (message: string) => void;
