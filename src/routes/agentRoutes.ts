@@ -36,7 +36,6 @@ router.post('/', async (req: Request, res: Response) => {
     // 4. Format the prompt with the optimized context
     const formattedPrompt = await getFormattedPrompt(message, {
       context: {
-        ...req.body.context,
         username,
         userRole,
       },

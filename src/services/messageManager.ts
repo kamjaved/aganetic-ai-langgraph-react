@@ -2,6 +2,7 @@
 import { BaseMessage, HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import prisma from '../db';
+import { MessageFormatter } from './messageFormatter';
 
 // Configuration for our window + summary approach
 const CONFIG = {
@@ -64,10 +65,10 @@ export class MessageManager {
 
     console.log(`Thread ${threadId} has ${messages.length} total messages`);
 
-    // If under threshold, return all messages
+    // If under threshold, return all messages converted to BaseMessage objects
     if (messages.length <= CONFIG.summarizationThreshold) {
       console.log(`Using all ${messages.length} messages directly (under threshold)`);
-      return this.convertToBaseMessages(messages);
+      return MessageFormatter.toBaseMessages(messages);
     }
 
     // Split into older and recent messages
