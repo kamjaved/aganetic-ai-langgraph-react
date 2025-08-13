@@ -1,6 +1,5 @@
 import express, { Request, Response, Application } from 'express';
 import { config } from 'dotenv';
-import { setupCheckpointer } from './agent';
 import cors from 'cors';
 import routes from './routes';
 
@@ -20,13 +19,6 @@ app.get('/', (req: Request, res: Response) => {
 // Use all routes defined in the routes directory
 app.use('/', routes);
 
-setupCheckpointer()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`Server is running on http://localhost:${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Failed to setup checkpointer:', err);
-    process.exit(1);
-  });
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
