@@ -9,6 +9,7 @@ import type { Message, User } from '../constant';
 export const useMessages = (selectedUser: User | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSwitchingUser, setIsSwitchingUser] = useState<boolean>(false);
 
   // Load messages when user is selected
   useEffect(() => {
@@ -24,12 +25,15 @@ export const useMessages = (selectedUser: User | null) => {
    * @param threadId - The ID of the thread to load messages for
    */
   const loadMessages = async (threadId: string) => {
+    setIsSwitchingUser(true);
     try {
       const loadedMessages = await apiService.fetchMessages(threadId);
       setMessages(loadedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
       setMessages([]);
+    } finally {
+      setIsSwitchingUser(false);
     }
   };
 
@@ -99,5 +103,5 @@ export const useMessages = (selectedUser: User | null) => {
     }
   };
 
-  return { messages, isLoading, sendMessage };
+  return { messages, isLoading, sendMessage, isSwitchingUser };
 };

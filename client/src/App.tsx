@@ -10,6 +10,7 @@ import UserInput from './component/UserInput';
 // Custom Hooks
 import { useMessages } from './hooks/useMessages';
 import { useUserSelection } from './hooks/useUserSelection';
+import MessageSkeleton from './component/MessageSkletonLoader';
 
 // Predefined users for the application
 const PREDEFINED_USERS: User[] = [
@@ -32,7 +33,7 @@ const App: React.FC = () => {
 
   // Custom hooks for user selection and message management
   const { selectedUser, handleUserSelect } = useUserSelection();
-  const { messages, isLoading, sendMessage } = useMessages(selectedUser);
+  const { messages, isLoading, sendMessage, isSwitchingUser } = useMessages(selectedUser);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -85,6 +86,8 @@ const App: React.FC = () => {
                 <p className="text-sm">Choose from Allan (HR), Joe (Employee), or Chris (Manager)</p>
               </div>
             </div>
+          ) : isSwitchingUser ? (
+            <MessageSkeleton />
           ) : messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500">

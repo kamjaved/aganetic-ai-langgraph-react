@@ -1,12 +1,12 @@
 import { add } from './../tools/mathTool';
 import { StateGraph, Annotation } from '@langchain/langgraph';
-import { ChatOpenAI } from '@langchain/openai';
 import { START, END } from '@langchain/langgraph';
 import { AIMessage, HumanMessage, BaseMessage } from '@langchain/core/messages';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { searchTool } from '../tools/searchTools';
+import { gpt4ominiModal as model } from '../tools/llm';
 
 // 1. Define State Schema
 const ResearchStateSchema = Annotation.Root({
@@ -36,13 +36,6 @@ const toolForSearch = new DynamicStructuredTool({
 
 const tools = [toolForSearch];
 const toolNode = new ToolNode(tools);
-
-// 3. Create and bind model
-const model = new ChatOpenAI({
-  model: 'gpt-4o-mini',
-  maxTokens: 1500,
-  temperature: 0.7,
-});
 
 const boundModel = model.bindTools(tools);
 

@@ -1,7 +1,8 @@
 // src/stateGraph/researchGraph.ts
 import { StateGraph, Annotation, START, END } from '@langchain/langgraph';
 import { searchTool } from '../tools/searchTools';
-import { ChatOpenAI } from '@langchain/openai';
+import { gpt4ominiModal as llm } from '../tools/llm';
+// import { ChatOpenAI } from '@langchain/openai';
 
 // Define our state interface
 const ResearchStateSchema = Annotation.Root({
@@ -13,13 +14,6 @@ const ResearchStateSchema = Annotation.Root({
 });
 
 type ResearchState = typeof ResearchStateSchema.State;
-
-// Initialize LLM
-const llm = new ChatOpenAI({
-  model: 'gpt-4o-mini',
-  maxTokens: 1500,
-  temperature: 0.7,
-});
 
 // Define node functions
 async function searchNode(state: ResearchState): Promise<Partial<ResearchState>> {

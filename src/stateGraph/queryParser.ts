@@ -1,7 +1,7 @@
-import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
+import { gpt4ominiModal as model } from '../tools/llm';
 
 // Define the expected output schema
 const CurrencyQuerySchema = z.object({
@@ -14,12 +14,6 @@ type CurrencyQuery = z.infer<typeof CurrencyQuerySchema>;
 
 // Create the structured output parser
 const parser = StructuredOutputParser.fromZodSchema(CurrencyQuerySchema);
-
-// Create LLM instance
-const model = new ChatOpenAI({
-  modelName: 'gpt-4o-mini',
-  temperature: 0.1,
-});
 
 // Create the prompt template
 const queryParsingPrompt = PromptTemplate.fromTemplate(`
