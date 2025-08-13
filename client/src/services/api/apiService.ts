@@ -30,28 +30,6 @@ export const apiService = {
   },
 
   /**
-   * Save a message to the database
-   * @param message - The message to save
-   * @param username - The username associated with the message
-   * @param userRole - The role of the user
-   */
-  saveMessage: async (message: Message, username?: string, userRole?: string): Promise<void> => {
-    try {
-      await axios.post(`${API_BASE_URL}/messages`, {
-        text: message.text,
-        sender: message.sender,
-        threadId: message.threadId,
-        username,
-        isMarkdown: message.isMarkdown || false,
-        userRole,
-      });
-    } catch (error) {
-      console.error('Error saving message:', error);
-      throw error;
-    }
-  },
-
-  /**
    * Send a message to the agent and get a response
    * @param message - The user message text
    * @param threadId - The thread ID

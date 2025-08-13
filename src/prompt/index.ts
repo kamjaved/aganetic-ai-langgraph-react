@@ -26,33 +26,35 @@ export const promptTemplates = {
   employee: ChatPromptTemplate.fromMessages([
     baseSystemPrompt,
     HumanMessagePromptTemplate.fromTemplate(
-      'User Query: {input}\nContext: {context}\nPrevious Conversation: {history}'
+      'User Query: {input}\nContext: {context}\nPrevious Conversation:\n{history}'
     ),
   ]),
 
   math: ChatPromptTemplate.fromMessages([
     baseSystemPrompt,
     HumanMessagePromptTemplate.fromTemplate(
-      'User Query: {input}\nMath Operation Type: {operation_type}\nContext: {context}'
+      'User Query: {input}\nMath Operation Type: {operation_type}\nContext: {context}\nPrevious Conversation:\n{history}'
     ),
   ]),
 
   news: ChatPromptTemplate.fromMessages([
     baseSystemPrompt,
     HumanMessagePromptTemplate.fromTemplate(
-      'User Query: {input}\nSearch Parameters: {params}\nContext: {context}'
+      'User Query: {input}\nSearch Parameters: {params}\nContext: {context}\nPrevious Conversation:\n{history}'
     ),
   ]),
 
   currency: ChatPromptTemplate.fromMessages([
     baseSystemPrompt,
     HumanMessagePromptTemplate.fromTemplate(
-      'User Query: {input}\nCurrency Details: {currency_info}\nContext: {context}'
+      'User Query: {input}\nCurrency Details: {currency_info}\nContext: {context}\nPrevious Conversation:\n{history}'
     ),
   ]),
 
   default: ChatPromptTemplate.fromMessages([
     baseSystemPrompt,
-    HumanMessagePromptTemplate.fromTemplate('User Query: {input}\nContext: {context}'),
+    HumanMessagePromptTemplate.fromTemplate(
+      'User Query: {input}\nContext: {context}\nPrevious Conversation:\n{history}'
+    ),
   ]),
 };

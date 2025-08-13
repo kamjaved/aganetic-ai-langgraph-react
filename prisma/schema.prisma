@@ -32,3 +32,13 @@ model Message {
   isMarkdown  Boolean  @default(false)
   userRole    String?
 }
+
+model ConversationSummary {
+  id           String   @id @default(uuid())
+  threadId     String
+  summary      String   @db.Text
+  messageCount Int
+  createdAt    DateTime @default(now())
+
+  @@index([threadId])
+}

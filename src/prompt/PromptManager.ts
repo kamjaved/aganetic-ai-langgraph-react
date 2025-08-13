@@ -1,11 +1,11 @@
-import { BaseMessage } from '@langchain/core/messages';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
 import { promptTemplates } from './index';
 import { StructuredTool } from 'langchain/tools';
+import { MessageFormatter } from '../services/messageFormatter';
 
 interface PromptContext {
-  input: string;
-  context?: string;
-  history?: string;
+  context?: Record<string, any>;
+  history?: any[] | string;
   [key: string]: any;
 }
 
@@ -42,25 +42,51 @@ export class PromptManager {
   }
 
   public async formatPrompt(input: string, context: PromptContext): Promise<BaseMessage[]> {
+    // Determine tool type
     const toolType = this.analyzeInput(input);
     const template = promptTemplates[toolType];
 
-    // Prepare base formatting parameters
-    const formatParams = {
-      input,
-      context: context.context || '',
-      history: context.history || '',
-      ...this.getToolSpecificParams(toolType, input, context),
-    };
-
     try {
-      return await template.formatMessages(formatParams);
+      // Early standardization - convert history to BaseMessage objects
+      const history = context.history || [];
+      const standardizedHistory = Array.isArray(history) ? MessageFormatter.toBaseMessages(history) : [];
+
+      // Get history in text format for templates that need it
+      const historyText = MessageFormatter.toTextFormat(standardizedHistory);
+
+      // Format parameters for the template
+      const formatParams = {
+        input,
+        context: JSON.stringify(context.context || {}),
+        history: historyText,
+        ...this.getToolSpecificParams(toolType, input, context),
+      };
+
+      // Extract system messages from the template
+      const systemMessages = (await template.formatMessages(formatParams)).filter(
+        (msg) => typeof msg._getType === 'function' && msg._getType() === 'system'
+      );
+
+      // Return the system message + standardized history + current message
+      return [
+        ...systemMessages, // System instructions from the template
+        ...standardizedHistory, // Previous conversation history
+        new HumanMessage(input), // Current user message
+      ];
     } catch (error) {
       console.warn(`Failed to format ${toolType} prompt, falling back to default`, error);
-      return await promptTemplates.default.formatMessages({
+
+      // Fallback to default template
+      const defaultResult = await promptTemplates.default.formatMessages({
         input,
-        context: context.context || '',
+        context: JSON.stringify(context.context || {}),
+        history:
+          typeof context.history === 'string'
+            ? context.history
+            : MessageFormatter.toTextFormat(context.history || []),
       });
+
+      return defaultResult;
     }
   }
 
